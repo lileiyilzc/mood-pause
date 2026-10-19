@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#4f46e5" />
+<title>情绪停顿 · 每日打卡</title>
+<style>
+:root{--ink:#20233f;--sub:#6b7194;--primary:#4f46e5;--ok:#16a34a;--warn:#d97706;--none:#e11d48;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(165deg,#e9edff 0%,#f4f2ff 55%,#fdf1f7 100%);min-height:100vh;color:var(--ink);padding:max(16px,env(safe-area-inset-top)) 14px 46px}
+.wrap{max-width:520px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;margin:6px 0 18px}
+h1{font-size:21px;margin:0}
+.streak{background:#fff;border-radius:999px;padding:9px 15px;font-weight:800;color:#e11d48;box-shadow:0 3px 10px rgba(79,70,229,.14);font-size:14px}
+.card{background:#fff;border-radius:22px;padding:24px 18px;box-shadow:0 10px 28px rgba(79,70,229,.10);margin-bottom:16px}
+.ask{font-size:19px;font-weight:800;text-align:center}
+.sub{color:var(--sub);font-size:13px;text-align:center;margin:6px 0 20px}
+.opts{display:flex;gap:10px}
+.opt{flex:1;border:2px solid #e4e7ff;background:#fafaff;border-radius:18px;padding:16px 4px;cursor:pointer;transition:transform .12s,border-color .12s,background .12s;text-align:center;font-size:14px;font-weight:600;user-select:none}
+.opt .ico{display:block;font-size:27px;margin-bottom:5px}
+.opt:active{transform:scale(.96)}
+.opt.sel.ok{border-color:var(--ok);background:#ecfdf3}
+.opt.sel.tried{border-color:var(--warn);background:#fffbeb}
+.opt.sel.none{border-color:var(--none);background:#fff1f2}
+.msg{text-align:center;font-size:15px;font-weight:600;margin-top:16px;color:var(--sub)}
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.sect h2{font-size:15px;margin:0}
+.sect .stat{font-size:12px;color:var(--primary);font-weight:700}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.day.ok{background:#c9ecd3;color:#166534}
+.day.tried{background:#fde3b8;color:#92400e}
+.day.none{background:#fbd7dc;color:#9f1239}
+.day.empty{background:#f0f2fa;color:#c3c7e0}
+.day.future{background:#eef0f7;color:#c0c4dd}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:12px;color:var(--sub);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.his{list-style:none;margin:0;padding:0}
+.his li{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #f0f1fa;font-size:14px}
+.his .tag{font-weight:700}
+.his .tag.ok{color:var(--ok)}
+.his .tag.tried{color:var(--warn)}
+.his .tag.none{color:var(--none)}
+.btns{display:flex;gap:10px}
+.btn{flex:1;background:#f3f4ff;border:2px solid #e4e7ff;border-radius:14px;padding:12px;font-size:13px;font-weight:700;color:var(--primary);cursor:pointer}
+.btn:active{transform:scale(.97)}
+.foot{text-align:center;color:var(--sub);font-size:12px;margin-top:18px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🌿 情绪停顿</h1>
+    <div class="streak" id="streak">🔥 连续 0 天</div>
+  </div>
+
+  <div class="card">
+    <div class="ask">今天，情绪停顿了吗？</div>
+    <div class="sub" id="today">——</div>
+    <div class="opts">
+      <button class="opt ok" data-c="done"><span class="ico">✅</span>停顿了</button>
+      <button class="opt tried" data-c="tried"><span class="ico">🫤</span>练了没停住</button>
+      <button class="opt none" data-c="none"><span class="ico">😶</span>没练</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="sect"><h2>近 35 天</h2><span class="stat" id="stat"></span></div>
+    <div class="cal" id="cal"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#16a34a"></i>停顿了</span>
+      <span><i class="dot" style="background:#d97706"></i>练了没停住</span>
+      <span><i class="dot" style="background:#e11d48"></i>没练</span>
+      <span><i class="dot" style="background:#f0f2fa"></i>无记录</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sect"><h2>最近记录</h2></div>
+    <ul class="his" id="his"></ul>
+  </div>
+
+  <div class="card">
+    <div class="sect"><h2>数据</h2></div>
+    <div class="btns">
+      <button class="btn" id="exp">导出备份</button>
+      <button class="btn" id="imp">导入数据</button>
+      <input type="file" id="file" accept=".json" hidden />
+    </div>
+  </div>
+
+  <div class="foot">
+    记录存在本机浏览器里，换设备前记得导出备份。<br>手机打不开时，检查电脑防火墙是否允许 Python 通过。
+  </div>
+</div>
+<script>
+var KEY='mood-pause-v1';
+function pad(n){return String(n).padStart(2,'0');}
+function key(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+var MSG={done:'很好，你比昨天更稳了一点。',tried:'没停住也没关系，你注意到了，这就是进步。',none:'今天没练也没关系，明天继续。'};
+var TAG={done:['停顿了','ok'],tried:['练了没停住','tried'],none:['没练','none']};
+var data={};
+try{data=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){data={};}
+var today=new Date();
+var tk=key(today);
+document.getElementById('today').textContent=today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日 · 先停半拍，再反应';
+
+function practiced(v){return v&&(v.c==='done'||v.c==='tried');}
+function streakDays(){
+  var n=0,d=new Date(today);
+  if(!practiced(data[key(d)])) d.setDate(d.getDate()-1);
+  while(practiced(data[key(d)])){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+function monthDone(){
+  var p=today.getFullYear()+'-'+pad(today.getMonth()+1),n=0;
+  Object.keys(data).forEach(function(k){if(k.indexOf(p)===0&&data[k].c==='done')n++;});
+  return n;
+}
+function render(){
+  document.getElementById('streak').textContent='🔥 连续 '+streakDays()+' 天';
+  document.getElementById('stat').textContent='本月停顿 '+monthDone()+' 次';
+  var cur=data[tk];
+  document.querySelectorAll('.opt').forEach(function(b){
+    b.classList.toggle('sel',!!cur&&b.dataset.c===cur.c);
+  });
+  document.getElementById('msg').textContent=cur?MSG[cur.c]:'点一个，记录今天的练习。';
+  var cal=document.getElementById('cal');
+  cal.innerHTML='';
+  var start=new Date(today);start.setDate(start.getDate()-34);
+  for(var i=0;i<35;i++){
+    var d=new Date(start);d.setDate(start.getDate()+i);
+    var k=key(d),v=data[k],cls;
+    if(d>today){cls='future';}
+    else if(v){cls=v.c;}
+    else{cls='empty';}
+    var el=document.createElement('div');
+    el.className='day '+cls;
+    el.textContent=d.getDate();
+    cal.appendChild(el);
+  }
+  var his=document.getElementById('his');
+  his.innerHTML='';
+  var keys=Object.keys(data).sort().reverse().slice(0,10);
+  if(!keys.length){
+    var li=document.createElement('li');
+    li.textContent='还没有记录，今天开始第一笔吧。';
+    li.style.color='var(--sub)';
+    his.appendChild(li);
+  }
+  keys.forEach(function(k){
+    var v=data[k],li=document.createElement('li');
+    li.innerHTML='<span>'+k+'</span><span class="tag '+v.c+'">'+TAG[v.c][0]+'</span>';
+    his.appendChild(li);
+  });
+}
+function set(c){
+  data[tk]={c:c,t:Date.now()};
+  try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){alert('浏览器存储不可用，请检查隐私模式设置。');}
+  render();
+}
+document.querySelectorAll('.opt').forEach(function(b){
+  b.addEventListener('click',function(){set(b.dataset.c);});
+});
+document.getElementById('exp').addEventListener('click',function(){
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='情绪停顿打卡-'+tk+'.json';
+  a.click();
+});
+document.getElementById('imp').addEventListener('click',function(){document.getElementById('file').click();});
+document.getElementById('file').addEventListener('change',function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      data=JSON.parse(r.result);
+      localStorage.setItem(KEY,JSON.stringify(data));
+      render();
+    }catch(err){alert('导入失败，文件格式不对。');}
+  };
+  r.readAsText(f);
+});
+render();
+</script>
+</body>
+</html>
